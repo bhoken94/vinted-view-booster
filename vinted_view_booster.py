@@ -117,46 +117,68 @@ if __name__ == "__main__":
             \ \_/ / | | | | ||  __/ (_| | \ \_/ / |  __/\ V  V /  | |_/ / (_) | (_) \__ \ ||  __/ |   
              \___/|_|_| |_|\__\___|\__,_|  \___/|_|\___| \_/\_/   \____/ \___/ \___/|___/\__\___|_|   
     ''')
+    use_all_items = input("Would you like to add views to all items? (y/n) ")
+    if use_all_items.lower() == 'n':
+        list_items = input("Insert items to perform view boost: (separate more items by ',') ").split(",")
+    elif use_all_items.lower() == 'y':
+        list_of_vinted_members_to_refresh = input("Insert users to perform view boost: (separate more users by ',') ").split(",")
+    else:
+        print("Only y or n is a valid input")
+        exit
     try:
         number_of_views = int(input("Insert number of views : (only number allowed) "))
     except ValueError:
         print("No.. input is not a number. It's a string")
         exit
-    list_of_vinted_members_to_refresh = input("Insert users to perform view boost: (separate more users by ',') ").split(",")
     duration_dict = {}
     total_start_time = time.time()
     with ViewBooster() as view_booster:
-        for member_number, member in enumerate(list_of_vinted_members_to_refresh):
-            start_time = time.time()
-            view_booster.open_url("https://www.vinted.it/")
-            view_booster.decline_all_cookies() if member_number == 0 else None
-            view_booster.choose_option_in_search_item("user")
-            view_booster.search_phrase_in_search_bar(member)
-            view_booster.choose_searched_phrase(member)
-            number_of_items = view_booster.get_number_of_items_of_a_user()
-            while len(view_booster.all_visible_user_items()) != number_of_items:
-                view_booster.scroll_max_down()
-            all_items_url = view_booster.get_all_items_url()
-            all_items_view = view_booster.get_random_visual(number_of_views, len(all_items_url))
-            print(f"\nCurrent member: {member}")
-            print(f"Number of items found: {number_of_items}")
+        if use_all_items.lower() == 'n':
+            all_items_view = view_booster.get_random_visual(number_of_views, len(list_items))
             print(f"Number of views increased for each item: {all_items_view}")
             print(f"Number of all views increased for all items: {number_of_views}\n")
-            for item_number, item_url in enumerate(all_items_url, 0):
-                print(f"\n{item_number+1}/{len(all_items_url)}: "
-                      f"{item_url[item_url.rfind('/') + item_url[item_url.rfind('/'):].find('-') + 1:]}")
+            for item_number, item_url in enumerate(list_items, 0):
+                print(f"\n{item_number+1}/{len(list_items)}: "
+                    f"{item_url[item_url.rfind('/') + item_url[item_url.rfind('/'):].find('-') + 1:]}")
                 view_booster.open_url(item_url)
+                view_booster.decline_all_cookies()
                 print(f"Current view count: {view_booster.get_current_view_count()}")
                 for refresh_number in range(1, all_items_view[item_number] + 1):
                     print(f"Refresh no. {refresh_number}/{all_items_view[item_number]}")
                     view_booster.refresh_page()
                     print(f"Current view count: {view_booster.get_current_view_count()}")
-            stop_time = time.time()
-            user_duration = int(stop_time - start_time)
-            duration_dict[member] = user_duration
-            print(f"\nDuration for user {member}: {user_duration//60}min {user_duration%60}s")
+        else:
+            for member_number, member in enumerate(list_of_vinted_members_to_refresh):
+                start_time = time.time()
+                view_booster.open_url("https://www.vinted.it/")
+                view_booster.decline_all_cookies() if member_number == 0 else None
+                view_booster.choose_option_in_search_item("user")
+                view_booster.search_phrase_in_search_bar(member)
+                view_booster.choose_searched_phrase(member)
+                number_of_items = view_booster.get_number_of_items_of_a_user()
+                while len(view_booster.all_visible_user_items()) != number_of_items:
+                    view_booster.scroll_max_down()
+                all_items_url = view_booster.get_all_items_url()
+                all_items_view = view_booster.get_random_visual(number_of_views, len(all_items_url))
+                print(f"\nCurrent member: {member}")
+                print(f"Number of items found: {number_of_items}")
+                print(f"Number of views increased for each item: {all_items_view}")
+                print(f"Number of all views increased for all items: {number_of_views}\n")
+                for item_number, item_url in enumerate(all_items_url, 0):
+                    print(f"\n{item_number+1}/{len(all_items_url)}: "
+                        f"{item_url[item_url.rfind('/') + item_url[item_url.rfind('/'):].find('-') + 1:]}")
+                    view_booster.open_url(item_url)
+                    print(f"Current view count: {view_booster.get_current_view_count()}")
+                    for refresh_number in range(1, all_items_view[item_number] + 1):
+                        print(f"Refresh no. {refresh_number}/{all_items_view[item_number]}")
+                        view_booster.refresh_page()
+                        print(f"Current view count: {view_booster.get_current_view_count()}")
+                stop_time = time.time()
+                user_duration = int(stop_time - start_time)
+                duration_dict[member] = user_duration
+                print(f"\nDuration for user {member}: {user_duration//60}min {user_duration%60}s")
     total_stop_time = time.time()
-    if len(list_of_vinted_members_to_refresh) > 1:
+    if  use_all_items.lower() == 'y' and len(list_of_vinted_members_to_refresh) > 1:
         print("\n\nSummary:")
         print(f"\nDuration for all users: {int(total_stop_time - total_start_time)//60}min "
               f"{int(total_stop_time - total_start_time)%60}s\n")
